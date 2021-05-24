@@ -6,7 +6,7 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { ContactService } from '../../domain/services/contact.service';
 
-@ValidatorConstraint({ name: 'RoleExists', async: true })
+@ValidatorConstraint({ name: 'ContactExistsRule', async: true })
 @Injectable()
 export class ContactExistsRule implements ValidatorConstraintInterface {
   constructor(

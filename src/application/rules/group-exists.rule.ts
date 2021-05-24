@@ -6,7 +6,7 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { GroupService } from '../../domain/services/group.service';
 
-@ValidatorConstraint({ name: 'RoleExists', async: true })
+@ValidatorConstraint({ name: 'GroupExistsRule', async: true })
 @Injectable()
 export class GroupExistsRule implements ValidatorConstraintInterface {
   constructor(
