@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
 export class FindContactDto {
   @IsNotEmpty()
@@ -10,6 +10,12 @@ export class FindContactDto {
   id?: string;
 
   @IsOptional()
+  @IsArray()
   @IsUUID('4', { each: true })
   ids?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  group_ids?: string[];
 }

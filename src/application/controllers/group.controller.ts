@@ -6,6 +6,7 @@ import { CreateGroupDto } from '../dtos/group/create-group.dto';
 import { UpdateGroupDto } from '../dtos/group/update-group.dto';
 import { FindGroupDto } from '../dtos/group/find-group.dto';
 import { DeleteGroupDto } from '../dtos/group/delete-group.dto';
+import { GroupIdExistsDto } from '../dtos/group/group-id-exists.dto';
 
 @Controller()
 export class GroupController {
@@ -39,5 +40,10 @@ export class GroupController {
   @MessagePattern('removeGroup')
   remove(@Payload('value') deleteGroup: DeleteGroupDto) {
     return this.groupService.remove(deleteGroup);
+  }
+
+  @MessagePattern('existsGroup')
+  existsGroupId(@Payload('value') groupIdExistsDto: GroupIdExistsDto) {
+    return this.groupService.idExists(groupIdExistsDto);
   }
 }

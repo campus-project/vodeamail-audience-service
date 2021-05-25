@@ -100,7 +100,12 @@ export class GroupService {
       actor,
     } = updateGroupDto;
 
-    const data = await this.groupRepository.findOne({ id });
+    const data = await this.groupRepository.findOne({
+      where: {
+        id,
+        organization_id,
+      },
+    });
 
     if (!data) {
       throw new RpcException(
@@ -116,7 +121,6 @@ export class GroupService {
 
     await this.groupRepository.save({
       ...data,
-      organization_id,
       name,
       description,
       is_visible,
@@ -148,9 +152,14 @@ export class GroupService {
   }
 
   async remove(deleteGroupDto: DeleteGroupDto): Promise<Group> {
-    const { id, is_hard, actor } = deleteGroupDto;
+    const { id, is_hard, organization_id, actor } = deleteGroupDto;
 
-    const data = await this.groupRepository.findOne({ id });
+    const data = await this.groupRepository.findOne({
+      where: {
+        id,
+        organization_id,
+      },
+    });
 
     if (!data) {
       throw new RpcException(

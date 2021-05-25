@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { In, Repository } from 'typeorm';
+import { In, Raw, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RpcException } from '@nestjs/microservices';
 
@@ -13,6 +13,7 @@ import { UpdateContactDto } from '../../application/dtos/contact/update-contact.
 import { FindContactDto } from '../../application/dtos/contact/find-contact.dto';
 import { DeleteContactDto } from '../../application/dtos/contact/delete-contact.dto';
 import { ContactIdExistsDto } from '../../application/dtos/contact/contact-id-exists.dto';
+import { UpdateSubscribeContactDto } from '../../application/dtos/contact/update-subscribe-contact.dto';
 
 @Injectable()
 export class ContactService {
@@ -80,7 +81,7 @@ export class ContactService {
   }
 
   async findAll(findAllContactDto: FindContactDto): Promise<Contact[]> {
-    const { id, ids, organization_id } = findAllContactDto;
+    const { id, ids, group_ids, organization_id } = findAllContactDto;
 
     const filteredIds = ids === undefined ? [] : ids;
     if (id !== undefined) {
@@ -88,9 +89,23 @@ export class ContactService {
     }
 
     return await this.contactRepository.find({
-      where: {
-        organization_id: organization_id,
-        ...(id || ids ? { id: In(filteredIds) } : {}),
+      join: {
+        alias: 'contact',
+        leftJoinAndSelect: {
+          contact_groups: 'contact.contact_groups',
+        },
+      },
+      where: (qb) => {
+        qb.where({
+          organization_id: organization_id,
+          ...(id || ids ? { id: In(filteredIds) } : {}),
+        });
+
+        if (group_ids !== undefined) {
+          qb.andWhere('contact_groups.group_id IN (:...groupIds)', {
+            groupIds: group_ids,
+          });
+        }
       },
     });
   }
@@ -118,7 +133,12 @@ export class ContactService {
       actor,
     } = updateContactDto;
 
-    const data = await this.contactRepository.findOne({ id });
+    const data = await this.contactRepository.findOne({
+      where: {
+        id,
+        organization_id,
+      },
+    });
 
     if (!data) {
       throw new RpcException(
@@ -134,7 +154,6 @@ export class ContactService {
 
     await this.contactRepository.save({
       ...data,
-      organization_id,
       email,
       name,
       mobile_phone,
@@ -172,10 +191,48 @@ export class ContactService {
     });
   }
 
-  async remove(deleteContactDto: DeleteContactDto): Promise<Contact> {
-    const { id, is_hard, actor } = deleteContactDto;
+  async updateSubscribe(
+    updateSubscribeContactDto: UpdateSubscribeContactDto,
+  ): Promise<Contact> {
+    const { id, organization_id, is_subscribed } = updateSubscribeContactDto;
 
-    const data = await this.contactRepository.findOne({ id });
+    const data = await this.contactRepository.findOne({
+      where: {
+        id,
+        organization_id,
+      },
+    });
+
+    if (!data) {
+      throw new RpcException(
+        JSON.stringify({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `Count not find resource ${id}.`,
+          error: 'Not Found',
+        }),
+      );
+    }
+
+    await this.contactRepository.save({
+      ...data,
+      is_subscribed,
+    });
+
+    return await this.findOne({
+      id: data.id,
+      organization_id: data.organization_id,
+    });
+  }
+
+  async remove(deleteContactDto: DeleteContactDto): Promise<Contact> {
+    const { id, is_hard, organization_id, actor } = deleteContactDto;
+
+    const data = await this.contactRepository.findOne({
+      where: {
+        id,
+        organization_id,
+      },
+    });
 
     if (!data) {
       throw new RpcException(

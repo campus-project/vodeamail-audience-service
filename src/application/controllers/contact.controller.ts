@@ -6,6 +6,8 @@ import { CreateContactDto } from '../dtos/contact/create-contact.dto';
 import { UpdateContactDto } from '../dtos/contact/update-contact.dto';
 import { FindContactDto } from '../dtos/contact/find-contact.dto';
 import { DeleteContactDto } from '../dtos/contact/delete-contact.dto';
+import { LimitOnUpdateNotSupportedError } from 'typeorm';
+import { UpdateSubscribeContactDto } from '../dtos/contact/update-subscribe-contact.dto';
 
 @Controller()
 export class ContactController {
@@ -34,6 +36,13 @@ export class ContactController {
   @MessagePattern('updateContact')
   update(@Payload('value') updateContactDto: UpdateContactDto) {
     return this.contactService.update(updateContactDto);
+  }
+
+  @MessagePattern('updateSubscribeContact')
+  updateSubscribe(
+    @Payload('value') updateSubscribeContactDto: UpdateSubscribeContactDto,
+  ) {
+    return this.contactService.updateSubscribe(updateSubscribeContactDto);
   }
 
   @MessagePattern('removeContact')
