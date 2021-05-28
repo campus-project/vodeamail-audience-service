@@ -186,8 +186,10 @@ export class GroupService {
 
   async idExists(groupIdExistsDto: GroupIdExistsDto): Promise<boolean> {
     const { id, organization_id } = groupIdExistsDto;
-    return !!(await this.groupRepository.findOne({
-      where: { id, organization_id },
-    }));
+    return (
+      (await this.groupRepository.count({
+        where: { id, organization_id },
+      })) > 0
+    );
   }
 }

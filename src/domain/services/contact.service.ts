@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { In, Raw, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RpcException } from '@nestjs/microservices';
 
@@ -81,13 +81,15 @@ export class ContactService {
   }
 
   async findAll(findAllContactDto: FindContactDto): Promise<Contact[]> {
-    const { id, ids, group_ids, organization_id } = findAllContactDto;
+    const { id, ids, is_subscribed, group_ids, organization_id } =
+      findAllContactDto;
 
     const filteredIds = ids === undefined ? [] : ids;
     if (id !== undefined) {
       filteredIds.push(id);
     }
 
+    console.log(findAllContactDto);
     return await this.contactRepository.find({
       join: {
         alias: 'contact',
@@ -99,6 +101,7 @@ export class ContactService {
         qb.where({
           organization_id: organization_id,
           ...(id || ids ? { id: In(filteredIds) } : {}),
+          ...(is_subscribed !== undefined ? { is_subscribed } : {}),
         });
 
         if (group_ids !== undefined) {
@@ -259,8 +262,10 @@ export class ContactService {
 
   async idExists(contactIdExistsDto: ContactIdExistsDto): Promise<boolean> {
     const { id, organization_id } = contactIdExistsDto;
-    return !!(await this.contactRepository.findOne({
-      where: { id, organization_id },
-    }));
+    return (
+      (await this.contactRepository.count({
+        where: { id, organization_id },
+      })) > 0
+    );
   }
 }
