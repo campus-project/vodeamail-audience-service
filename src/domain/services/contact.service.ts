@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { In, Repository } from 'typeorm';
+import { Brackets, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RpcException } from '@nestjs/microservices';
 
@@ -81,36 +81,50 @@ export class ContactService {
   }
 
   async findAll(findAllContactDto: FindContactDto): Promise<Contact[]> {
-    const { id, ids, is_subscribed, group_ids, organization_id } =
-      findAllContactDto;
+    const { relations } = findAllContactDto;
+    const data = await this.findQueryBuilder(findAllContactDto).getMany();
 
-    const filteredIds = ids === undefined ? [] : ids;
-    if (id !== undefined) {
-      filteredIds.push(id);
+    if (relations === undefined) {
+      return data;
     }
 
-    console.log(findAllContactDto);
-    return await this.contactRepository.find({
-      join: {
-        alias: 'contact',
-        leftJoinAndSelect: {
-          contact_groups: 'contact.contact_groups',
-        },
-      },
-      where: (qb) => {
-        qb.where({
-          organization_id: organization_id,
-          ...(id || ids ? { id: In(filteredIds) } : {}),
-          ...(is_subscribed !== undefined ? { is_subscribed } : {}),
+    const contactIds = [];
+
+    const relationValues = {
+      contactGroups: [],
+    };
+
+    data.forEach((contact) => {
+      contactIds.push(contact.id);
+    });
+
+    if (relations.includes('groups')) {
+      relationValues.contactGroups = await this.contactGroupRepository.find({
+        where: { contact_id: In([...new Set(contactIds)]) },
+        relations: ['group'],
+      });
+    }
+
+    return data.map((contact) => {
+      if (relationValues.contactGroups !== undefined) {
+        const groups = [];
+        relationValues.contactGroups.forEach((contactGroup) => {
+          if (contactGroup.contact_id === contact.id) {
+            groups.push(contactGroup.group);
+          }
         });
 
-        if (group_ids !== undefined) {
-          qb.andWhere('contact_groups.group_id IN (:...groupIds)', {
-            groupIds: group_ids,
-          });
-        }
-      },
+        Object.assign(contact, {
+          groups,
+        });
+      }
+
+      return contact;
     });
+  }
+
+  async findAllCount(findAllCountContactDto: FindContactDto): Promise<number> {
+    return await this.findQueryBuilder(findAllCountContactDto).getCount();
   }
 
   async findOne(findOneContactDto: FindContactDto): Promise<Contact> {
@@ -267,5 +281,66 @@ export class ContactService {
         where: { id, organization_id },
       })) > 0
     );
+  }
+
+  findQueryBuilder(params: FindContactDto): SelectQueryBuilder<Contact> {
+    const {
+      id,
+      ids,
+      organization_id,
+      is_subscribed,
+      group_ids,
+      search,
+      per_page,
+      page = 1,
+      order_by,
+      sorted_by = 'ASC',
+    } = params;
+
+    const filteredIds = ids === undefined ? [] : ids;
+    if (id !== undefined) {
+      filteredIds.push(id);
+    }
+
+    let qb = this.contactRepository
+      .createQueryBuilder('contact')
+      .leftJoin('contact.contact_groups', 'contact_groups')
+      .innerJoinAndSelect('contact.summary', 'summary')
+      .where((qb) => {
+        qb.where({
+          organization_id: organization_id,
+          ...(id || ids ? { id: In(filteredIds) } : {}),
+          ...(is_subscribed !== undefined ? { is_subscribed } : {}),
+        });
+
+        if (group_ids !== undefined) {
+          qb.andWhere('contact_groups.group_id IN (:...groupIds)', {
+            groupIds: group_ids,
+          });
+        }
+
+        if (search !== undefined) {
+          const params = { search: `%${search}%` };
+
+          qb.andWhere(
+            new Brackets((q) => {
+              q.where('contact.email LIKE :search', params);
+            }),
+          );
+        }
+      });
+
+    if (per_page !== undefined) {
+      qb = qb.take(per_page).skip(page > 1 ? per_page * (page - 1) : 0);
+    }
+
+    if (order_by !== undefined) {
+      qb = qb.orderBy(
+        order_by,
+        ['desc'].includes(sorted_by.toLowerCase()) ? 'DESC' : 'ASC',
+      );
+    }
+
+    return qb;
   }
 }

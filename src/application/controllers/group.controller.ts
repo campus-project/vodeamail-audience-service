@@ -27,6 +27,11 @@ export class GroupController {
     return this.groupService.findAll(findGroup);
   }
 
+  @MessagePattern('findAllCountGroup')
+  findAllCount(@Payload('value') findGroup: FindGroupDto) {
+    return this.groupService.findAllCount(findGroup);
+  }
+
   @MessagePattern('findOneGroup')
   findOne(@Payload('value') findGroup: FindGroupDto) {
     return this.groupService.findOne(findGroup);

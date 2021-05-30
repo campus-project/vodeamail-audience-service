@@ -22,10 +22,6 @@ export class CreateGroupDto {
   @IsString()
   description?: string;
 
-  @IsOptional()
-  @IsBoolean()
-  is_visible?: boolean;
-
   @IsArray()
   @IsUUID('4', { each: true })
   @Validate(ContactExistsRule, { each: true })

@@ -3,11 +3,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { ContactGroup } from './contact-group.entity';
+import { SummaryContactView } from '../views/summary-contact.view';
 
 @Entity('contacts')
 export class Contact {
@@ -69,4 +72,8 @@ export class Contact {
     onUpdate: 'CASCADE',
   })
   contact_groups: ContactGroup[];
+
+  @OneToOne(() => SummaryContactView, (object) => object.contact)
+  @JoinColumn()
+  summary: SummaryContactView;
 }
