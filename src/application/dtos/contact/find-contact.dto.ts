@@ -33,11 +33,6 @@ export class FindContactDto {
   group_ids?: string[];
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  relations?: string[];
-
-  @IsOptional()
   @IsString()
   search?: string;
 
@@ -58,4 +53,9 @@ export class FindContactDto {
   @IsOptional()
   @IsString()
   sorted_by?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  relations?: string[];
 }

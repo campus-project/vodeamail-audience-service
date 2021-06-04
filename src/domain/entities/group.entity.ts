@@ -3,7 +3,6 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -46,11 +45,9 @@ export class Group {
 
   @OneToMany(() => ContactGroup, (object) => object.group, {
     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE',
   })
   contact_groups: ContactGroup[];
 
   @OneToOne(() => SummaryGroupView, (object) => object.group)
-  @JoinColumn()
   summary: SummaryGroupView;
 }

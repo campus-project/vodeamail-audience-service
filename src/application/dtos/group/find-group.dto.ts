@@ -26,11 +26,6 @@ export class FindGroupDto {
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  relations?: string[];
-
-  @IsOptional()
-  @IsArray()
   @IsUUID('4', { each: true })
   contact_ids?: string[];
 
@@ -55,4 +50,9 @@ export class FindGroupDto {
   @IsOptional()
   @IsString()
   sorted_by?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  relations?: string[];
 }

@@ -74,6 +74,5 @@ export class Contact {
   contact_groups: ContactGroup[];
 
   @OneToOne(() => SummaryContactView, (object) => object.contact)
-  @JoinColumn()
   summary: SummaryContactView;
 }

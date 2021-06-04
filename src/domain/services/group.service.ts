@@ -65,13 +65,14 @@ export class GroupService {
     const { relations } = findAllGroupDto;
     const data = await this.findQueryBuilder(findAllGroupDto).getMany();
 
-    if (relations === undefined) {
+    if (relations === undefined || relations.length === 0) {
       return data;
     }
 
     const groupIds = [];
+
     const relationValues = {
-      contactGroups: [],
+      contactGroups: undefined,
     };
 
     data.forEach((group) => {

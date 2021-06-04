@@ -84,14 +84,14 @@ export class ContactService {
     const { relations } = findAllContactDto;
     const data = await this.findQueryBuilder(findAllContactDto).getMany();
 
-    if (relations === undefined) {
+    if (relations === undefined || relations.length == 0) {
       return data;
     }
 
     const contactIds = [];
 
     const relationValues = {
-      contactGroups: [],
+      contactGroups: undefined,
     };
 
     data.forEach((contact) => {
