@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RpcException } from '@nestjs/microservices';
+import { Brackets, In, Repository, SelectQueryBuilder } from 'typeorm';
 
 import * as _ from 'lodash';
 
@@ -26,20 +26,13 @@ export class GroupService {
   ) {}
 
   async create(createGroupDto: CreateGroupDto): Promise<Group> {
-    const {
-      organization_id,
-      name,
-      description,
-      is_visible,
-      contact_ids,
-      actor,
-    } = createGroupDto;
+    const { organization_id, name, description, contact_ids, actor } =
+      createGroupDto;
 
     const data = await this.groupRepository.save({
       organization_id,
       name,
       description,
-      is_visible,
       created_by: actor,
       updated_by: actor,
     });
@@ -69,19 +62,50 @@ export class GroupService {
   }
 
   async findAll(findAllGroupDto: FindGroupDto): Promise<Group[]> {
-    const { id, ids, organization_id } = findAllGroupDto;
+    const { relations } = findAllGroupDto;
+    const data = await this.findQueryBuilder(findAllGroupDto).getMany();
 
-    const filteredIds = ids === undefined ? [] : ids;
-    if (id !== undefined) {
-      filteredIds.push(id);
+    if (relations === undefined || relations.length === 0) {
+      return data;
     }
 
-    return await this.groupRepository.find({
-      where: {
-        organization_id: organization_id,
-        ...(id || ids ? { id: In(filteredIds) } : {}),
-      },
+    const groupIds = [];
+
+    const relationValues = {
+      contactGroups: undefined,
+    };
+
+    data.forEach((group) => {
+      groupIds.push(group.id);
     });
+
+    if (relations.includes('contacts')) {
+      relationValues.contactGroups = await this.contactGroupRepository.find({
+        where: { group_id: In([...new Set(groupIds)]) },
+        relations: ['contact'],
+      });
+    }
+
+    return data.map((group) => {
+      if (relationValues.contactGroups !== undefined) {
+        const contacts = [];
+        relationValues.contactGroups.forEach((contactGroup) => {
+          if (contactGroup.group_id === group.id) {
+            contacts.push(contactGroup.contact);
+          }
+        });
+
+        Object.assign(group, {
+          contacts,
+        });
+      }
+
+      return group;
+    });
+  }
+
+  async findAllCount(findAllCountGroupDto: FindGroupDto): Promise<number> {
+    return await this.findQueryBuilder(findAllCountGroupDto).getCount();
   }
 
   async findOne(findOneGroupDto: FindGroupDto): Promise<Group> {
@@ -90,15 +114,8 @@ export class GroupService {
   }
 
   async update(updateGroupDto: UpdateGroupDto): Promise<Group> {
-    const {
-      id,
-      organization_id,
-      name,
-      description,
-      is_visible,
-      contact_ids,
-      actor,
-    } = updateGroupDto;
+    const { id, organization_id, name, description, contact_ids, actor } =
+      updateGroupDto;
 
     const data = await this.groupRepository.findOne({
       where: {
@@ -123,7 +140,6 @@ export class GroupService {
       ...data,
       name,
       description,
-      is_visible,
       updated_by: actor,
     });
 
@@ -191,5 +207,64 @@ export class GroupService {
         where: { id, organization_id },
       })) > 0
     );
+  }
+
+  findQueryBuilder(params: FindGroupDto): SelectQueryBuilder<Group> {
+    const {
+      id,
+      ids,
+      organization_id,
+      contact_ids,
+      search,
+      per_page,
+      page = 1,
+      order_by,
+      sorted_by = 'ASC',
+    } = params;
+
+    const filteredIds = ids === undefined ? [] : ids;
+    if (id !== undefined) {
+      filteredIds.push(id);
+    }
+
+    let qb = this.groupRepository
+      .createQueryBuilder('group')
+      .leftJoin('group.contact_groups', 'contact_groups')
+      .innerJoinAndSelect('group.summary', 'summary')
+      .where((qb) => {
+        qb.where({
+          organization_id: organization_id,
+          ...(id || ids ? { id: In(filteredIds) } : {}),
+        });
+
+        if (contact_ids !== undefined) {
+          qb.andWhere('contact_groups.contact_id IN (:...contactIds)', {
+            contactIds: contact_ids,
+          });
+        }
+
+        if (search !== undefined) {
+          const params = { search: `%${search}%` };
+
+          qb.andWhere(
+            new Brackets((q) => {
+              q.where('group.name LIKE :search', params);
+            }),
+          );
+        }
+      });
+
+    if (per_page !== undefined) {
+      qb = qb.take(per_page).skip(page > 1 ? per_page * (page - 1) : 0);
+    }
+
+    if (order_by !== undefined) {
+      qb = qb.orderBy(
+        order_by,
+        ['desc'].includes(sorted_by.toLowerCase()) ? 'DESC' : 'ASC',
+      );
+    }
+
+    return qb;
   }
 }

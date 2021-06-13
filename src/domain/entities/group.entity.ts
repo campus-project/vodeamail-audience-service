@@ -4,10 +4,12 @@ import {
   DeleteDateColumn,
   Entity,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { ContactGroup } from './contact-group.entity';
+import { SummaryGroupView } from '../views/summary-group.view';
 
 @Entity('groups')
 export class Group {
@@ -22,9 +24,6 @@ export class Group {
 
   @Column({ type: 'varchar', nullable: true })
   description?: string;
-
-  @Column({ type: 'tinyint', default: 1 })
-  is_visible: boolean;
 
   @CreateDateColumn()
   created_at: string;
@@ -46,7 +45,9 @@ export class Group {
 
   @OneToMany(() => ContactGroup, (object) => object.group, {
     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE',
   })
   contact_groups: ContactGroup[];
+
+  @OneToOne(() => SummaryGroupView, (object) => object.group)
+  summary: SummaryGroupView;
 }

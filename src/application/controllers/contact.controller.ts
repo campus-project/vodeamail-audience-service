@@ -6,7 +6,6 @@ import { CreateContactDto } from '../dtos/contact/create-contact.dto';
 import { UpdateContactDto } from '../dtos/contact/update-contact.dto';
 import { FindContactDto } from '../dtos/contact/find-contact.dto';
 import { DeleteContactDto } from '../dtos/contact/delete-contact.dto';
-import { LimitOnUpdateNotSupportedError } from 'typeorm';
 import { UpdateSubscribeContactDto } from '../dtos/contact/update-subscribe-contact.dto';
 
 @Controller()
@@ -26,6 +25,11 @@ export class ContactController {
   @MessagePattern('findAllContact')
   findAll(@Payload('value') findContact: FindContactDto) {
     return this.contactService.findAll(findContact);
+  }
+
+  @MessagePattern('findAllCountContact')
+  findAllCount(@Payload('value') findContact: FindContactDto) {
+    return this.contactService.findAllCount(findContact);
   }
 
   @MessagePattern('findOneContact')

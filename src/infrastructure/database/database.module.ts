@@ -6,6 +6,8 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { Contact } from '../../domain/entities/contact.entity';
 import { ContactGroup } from '../../domain/entities/contact-group.entity';
 import { Group } from '../../domain/entities/group.entity';
+import { SummaryContactView } from '../../domain/views/summary-contact.view';
+import { SummaryGroupView } from '../../domain/views/summary-group.view';
 
 @Module({
   imports: [
@@ -26,7 +28,13 @@ import { Group } from '../../domain/entities/group.entity';
         synchronize: true,
         dropSchema: false,
         logging: false,
-        entities: [Contact, ContactGroup, Group],
+        entities: [
+          Contact,
+          ContactGroup,
+          Group,
+          SummaryContactView,
+          SummaryGroupView,
+        ],
         timezone: 'UTC',
       }),
     }),
