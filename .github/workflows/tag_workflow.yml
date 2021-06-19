@@ -8,7 +8,7 @@ on:
 env:
   GITHUB_SHA: ${{ github.sha }}
   GITHUB_REF: ${{ github.ref }}
-  IMAGE: vodea-cloud/vodeamail-mailer-service
+  IMAGE: vodea-cloud/vodeamail-audience-service
   REGISTRY_HOSTNAME: asia.gcr.io
 
 jobs:
