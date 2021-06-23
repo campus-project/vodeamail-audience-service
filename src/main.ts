@@ -25,20 +25,10 @@ patchTypeORMRepositoryWithBaseRepository();
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {
-      transport: Transport.KAFKA,
+      transport: Transport.TCP,
       options: {
-        client: {
-          clientId:
-            configService.get<string>('KAFKA_CLIENT_ID') || 'account-service',
-          brokers: [
-            configService.get<string>('KAFKA_BROKER') || 'localhost:9092',
-          ],
-        },
-        consumer: {
-          groupId:
-            configService.get<string>('KAFKA_CONSUMER_GROUP_ID') ||
-            'account-service-consumer',
-        },
+        host: appHost,
+        port: appPort,
       },
     },
   );
