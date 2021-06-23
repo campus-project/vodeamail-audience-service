@@ -8,6 +8,8 @@ import { FindContactDto } from '../dtos/contact/find-contact.dto';
 import { DeleteContactDto } from '../dtos/contact/delete-contact.dto';
 import { UpdateSubscribeContactDto } from '../dtos/contact/update-subscribe-contact.dto';
 
+import { Contact } from '../../domain/entities/contact.entity';
+
 @Controller()
 export class ContactController {
   constructor(
@@ -15,42 +17,44 @@ export class ContactController {
   ) {}
 
   @MessagePattern('createContact')
-  create(
-    @Payload('value')
+  async create(
+    @Payload()
     createContactDto: CreateContactDto,
-  ) {
-    return this.contactService.create(createContactDto);
+  ): Promise<Contact> {
+    return await this.contactService.create(createContactDto);
   }
 
   @MessagePattern('findAllContact')
-  findAll(@Payload('value') findContact: FindContactDto) {
-    return this.contactService.findAll(findContact);
+  async findAll(@Payload() findContact: FindContactDto): Promise<Contact[]> {
+    return await this.contactService.findAll(findContact);
   }
 
   @MessagePattern('findAllCountContact')
-  findAllCount(@Payload('value') findContact: FindContactDto) {
-    return this.contactService.findAllCount(findContact);
+  async findAllCount(@Payload() findContact: FindContactDto): Promise<number> {
+    return await this.contactService.findAllCount(findContact);
   }
 
   @MessagePattern('findOneContact')
-  findOne(@Payload('value') findContact: FindContactDto) {
-    return this.contactService.findOne(findContact);
+  async findOne(@Payload() findContact: FindContactDto): Promise<Contact> {
+    return await this.contactService.findOne(findContact);
   }
 
   @MessagePattern('updateContact')
-  update(@Payload('value') updateContactDto: UpdateContactDto) {
-    return this.contactService.update(updateContactDto);
+  async update(
+    @Payload() updateContactDto: UpdateContactDto,
+  ): Promise<Contact> {
+    return await this.contactService.update(updateContactDto);
   }
 
   @MessagePattern('updateSubscribeContact')
-  updateSubscribe(
-    @Payload('value') updateSubscribeContactDto: UpdateSubscribeContactDto,
-  ) {
-    return this.contactService.updateSubscribe(updateSubscribeContactDto);
+  async updateSubscribe(
+    @Payload() updateSubscribeContactDto: UpdateSubscribeContactDto,
+  ): Promise<Contact> {
+    return await this.contactService.updateSubscribe(updateSubscribeContactDto);
   }
 
   @MessagePattern('removeContact')
-  remove(@Payload('value') deleteContact: DeleteContactDto) {
-    return this.contactService.remove(deleteContact);
+  async remove(@Payload() deleteContact: DeleteContactDto): Promise<Contact> {
+    return await this.contactService.remove(deleteContact);
   }
 }

@@ -8,6 +8,8 @@ import { FindGroupDto } from '../dtos/group/find-group.dto';
 import { DeleteGroupDto } from '../dtos/group/delete-group.dto';
 import { GroupIdExistsDto } from '../dtos/group/group-id-exists.dto';
 
+import { Group } from '../../domain/entities/group.entity';
+
 @Controller()
 export class GroupController {
   constructor(
@@ -15,40 +17,42 @@ export class GroupController {
   ) {}
 
   @MessagePattern('createGroup')
-  create(
-    @Payload('value')
+  async create(
+    @Payload()
     createGroupDto: CreateGroupDto,
-  ) {
-    return this.groupService.create(createGroupDto);
+  ): Promise<Group> {
+    return await this.groupService.create(createGroupDto);
   }
 
   @MessagePattern('findAllGroup')
-  findAll(@Payload('value') findGroup: FindGroupDto) {
-    return this.groupService.findAll(findGroup);
+  async findAll(@Payload() findGroup: FindGroupDto): Promise<Group[]> {
+    return await this.groupService.findAll(findGroup);
   }
 
   @MessagePattern('findAllCountGroup')
-  findAllCount(@Payload('value') findGroup: FindGroupDto) {
-    return this.groupService.findAllCount(findGroup);
+  async findAllCount(@Payload() findGroup: FindGroupDto): Promise<number> {
+    return await this.groupService.findAllCount(findGroup);
   }
 
   @MessagePattern('findOneGroup')
-  findOne(@Payload('value') findGroup: FindGroupDto) {
-    return this.groupService.findOne(findGroup);
+  async findOne(@Payload() findGroup: FindGroupDto): Promise<Group> {
+    return await this.groupService.findOne(findGroup);
   }
 
   @MessagePattern('updateGroup')
-  update(@Payload('value') updateGroupDto: UpdateGroupDto) {
-    return this.groupService.update(updateGroupDto);
+  async update(@Payload() updateGroupDto: UpdateGroupDto): Promise<Group> {
+    return await this.groupService.update(updateGroupDto);
   }
 
   @MessagePattern('removeGroup')
-  remove(@Payload('value') deleteGroup: DeleteGroupDto) {
-    return this.groupService.remove(deleteGroup);
+  async remove(@Payload() deleteGroup: DeleteGroupDto): Promise<Group> {
+    return await this.groupService.remove(deleteGroup);
   }
 
   @MessagePattern('existsGroup')
-  existsGroupId(@Payload('value') groupIdExistsDto: GroupIdExistsDto) {
-    return this.groupService.idExists(groupIdExistsDto);
+  async existsGroupId(
+    @Payload() groupIdExistsDto: GroupIdExistsDto,
+  ): Promise<boolean> {
+    return await this.groupService.idExists(groupIdExistsDto);
   }
 }

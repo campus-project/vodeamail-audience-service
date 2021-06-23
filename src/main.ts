@@ -1,6 +1,6 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { ClassSerializerInterceptor } from '@nestjs/common';
+import { ClassSerializerInterceptor, Logger } from '@nestjs/common';
 import { useContainer } from 'class-validator';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -17,6 +17,11 @@ patchTypeORMRepositoryWithBaseRepository();
 
 (async () => {
   const configService = new ConfigService();
+  const logger = new Logger('Main');
+
+  const appHost = configService.get<string>('APP_HOST');
+  const appPort = configService.get<number>('APP_PORT');
+
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {
@@ -56,5 +61,7 @@ patchTypeORMRepositoryWithBaseRepository();
   //is used for allow custom pipes attribute
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
-  await app.listen();
+  await app.listen(() => {
+    logger.log(`Microservice is listening on ${appHost}:${appPort}`);
+  });
 })();
